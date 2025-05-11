@@ -41,11 +41,12 @@
 </head>
 <body>
 
-  <h1>🧠 Online Personality Questionnaire</h1>
-
+  <h1>Online Personality Questionnaire</h1>
+  <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>  
   <form id="quizForm">
     <div class="section">
-      <h2>📊 Section 0: Demographics (Optional)</h2>
+      <h2>📊 Section 0: Demographics </h2>
+      <p>Please select your age group.</p>
       <label>Age Group:</label>
       <select name="age">
         <option value="">-- Select --</option>
@@ -139,11 +140,16 @@
       });
 
       let resultText = `<h2>Your Results</h2>`;
+      let total = 0;
       for (let section in scores) {
         let avg = (scores[section] / (counts[section] || 1)).toFixed(2);
         resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
+        total += avg;
+        avg ? total += avg : total += 0;
       }
-
+      let ans = (total / 1).toFixed(2);
+      resultText += `<p>Average score: ${ans}</p>`;
+      resultText += `<p>Thank you for completing the questionnaire.</p>`;
       document.getElementById('results').innerHTML = resultText;
     }
 
