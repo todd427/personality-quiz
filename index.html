@@ -3,49 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Online Personality Questionnaire</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 20px auto;
-      padding: 20px;
-      background-color: #f4f4f4;
-      border-radius: 10px;
-    }
-    h2 {
-      border-bottom: 2px solid #ccc;
-      padding-bottom: 5px;
-    }
-    .section {
-      margin-bottom: 20px;
-    }
-    .question {
-      margin-bottom: 10px;
-    }
-    select {
-      width: 100%;
-      padding: 6px;
-    }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-    }
-    #results {
-      margin-top: 30px;
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-    }
-  </style>
+  <title>Feyman-Heisenberg Personality Questionnaire</title>
+  <link rel="stylesheet" href="style.css">
+  
 </head>
 <body>
 
-  <h1>Online Personality Questionnaire</h1>
+  <h1>Feyman-Heisenberg Personality Questionnaire</h1>
   <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>  
   <form id="quizForm">
     <div class="section">
-      <h2>📊 Section 0: Demographics </h2>
+      <h2>Demographics </h2>
       <p>Please select your age group.</p>
       <label>Age Group:</label>
       <select name="age">
@@ -54,16 +22,22 @@
         <option>3–12 (Child)</option>
         <option>13–17 (Teen)</option>
         <option>18–24 (Young Adult)</option>
-        <option>25–34 (Adult)</option>
-        <option>35–44 (Adult)</option>
+        <option>25–34 (Early Adult)</option>
+        <option>35–44 (Middle Adult)</option>
         <option>45–54 (Older Adult)</option>
         <option>55–64 (Senior)</option>
         <option>65+ (Elder)</option>
       </select>
     </div>
+    <h2>Questions</h2>
+    <p>Please answer the following questions to help us understand your online personality. 
+      question is rated on a scale of 1 to 5, where 1 is <b>strongly</b> disagree and 5 is strongly <b>agree</b>.</p>
+      
+    <div class="section" id="questions">
 
-    <div class="section" id="questions"></div>
+    </div>
 
+ 
     <div class="section">
       <button type="button" id="submitBtn">Submit</button>
     </div>
@@ -72,6 +46,7 @@
   <div id="results"></div>
 
   <script>
+    let userUUID = '';
     const questions = [
       { text: "I carefully curate the photos and content I post online.", section: "selfPresentation" },
       { text: "I present a more idealized version of myself on social media.", section: "selfPresentation" },
@@ -103,6 +78,17 @@
       { text: "I enjoy experimenting with new online platforms or tools.", section: "platform" },
       { text: "I use different platforms for different purposes (e.g., work vs. fun).", section: "platform" }
     ];
+
+    function hashString(str) {
+      let hash = 0, i, chr;
+      if (str.length === 0) return hash.toString();
+      for (i = 0; i < str.length; i++) {
+        chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0;
+      }
+      return 'uuid-' + Math.abs(hash).toString(16);
+    }
 
     function renderQuestions() {
       const container = document.getElementById('questions');
@@ -143,13 +129,59 @@
       let total = 0;
       for (let section in scores) {
         let avg = (scores[section] / (counts[section] || 1)).toFixed(2);
-        resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
+        //resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
         total += avg;
         avg ? total += avg : total += 0;
       }
-      let ans = (total / 1).toFixed(2);
-      resultText += `<p>Average score: ${ans}</p>`;
-      resultText += `<p>Thank you for completing the questionnaire.</p>`;
+      total = Object.values(scores).reduce((sum, score) => sum + score, 0);
+      /*const numAnswered = Object.values(counts).reduce((sum, count) => sum + count, 0);
+      total = numAnswered > 0 ? total / numAnswered : 0;
+      let ans = (total / 1).toFixed(2);*/
+      resultText += `<p>Feyman-Heisenberg Personality Index: ${total}</p>`;
+      resultText += `<h3>Thank you for completing the questionnaire.</h3>`;
+      // Save results to JSON file
+      const resultData = {
+        Test: 'Feyman-Heisenberg Personality Questionnaire',
+        timestamp: new Date().toISOString(),
+        age: document.querySelector('select[name="age"]').value,
+        total: total,
+        scores: scores
+      };
+      // Convert result data to JSON string
+      const jsonData = JSON.stringify(resultData, null, 2);
+
+      // Create a Blob containing the JSON data
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'UUID-' + userUUID + '.json';
+      
+      // Programmatically click the link to trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      fetch('/save-results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(resultData)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to save results');
+        }
+        console.log('Results saved successfully');
+      })
+      .catch(error => {
+        console.error('Error saving results:', error);
+      });
       document.getElementById('results').innerHTML = resultText;
     }
 
@@ -157,6 +189,14 @@
       renderQuestions();
       document.getElementById('submitBtn').addEventListener('click', calculateResults);
     });
+    
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+          const ip = data.ip;
+          const userAgent = navigator.userAgent;
+          userUUID = hashString(ip + userAgent);
+        });
   </script>
 </body>
 </html>
