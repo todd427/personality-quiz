@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Online Personality Questionnaire</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <h1>🧠 Online Personality Questionnaire</h1>
+
+  <form id="quizForm">
+    <div class="section">
+      <h2>📊 Section 0: Demographics (Optional)</h2>
+      <label>Age Group:</label>
+      <select name="age" id="age">
+        <option value="">-- Select --</option>
+        <option>0–2 (Infant)</option>
+        <option>3–12 (Child)</option>
+        <option>13–17 (Teen)</option>
+        <option>18–24 (Young Adult)</option>
+        <option>25–34 (Adult)</option>
+        <option>35–44 (Adult)</option>
+        <option>45–54 (Older Adult)</option>
+        <option>55–64 (Senior)</option>
+        <option>65+ (Elder)</option>
+      </select>
+    </div>
+
+    <div class="section" id="questions"></div>
+
+    <div class="section">
+      <button type="button" id="submitBtn">Submit</button>
+    </div>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+    let userUUID = '';
+    let questions = [];
+
+    function hashString(str) {
+      let hash = 0, i, chr;
+      if (str.length === 0) return hash.toString();
+      for (i = 0; i < str.length; i++) {
+        chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0;
+      }
+      return 'uuid-' + Math.abs(hash).toString(16);
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questions');
+      container.innerHTML = '';
+      questions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        const selectName = `q${i + 1}`;
+        div.innerHTML = `${i + 1}. ${q.text} <select name="${selectName}" id="${selectName}">
+          <option value="">--</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>`;
+        container.appendChild(div);
+      });
+    }
+
+    function calculateResults() {
+      const scores = {
+        selfPresentation: 0,
+        communication: 0,
+        privacy: 0,
+        interaction: 0,
+        platform: 0
+      };
+      const counts = { ...scores };
+
+      questions.forEach((q, i) => {
+        const selectElement = document.getElementById(`q${i + 1}`);
+        if (selectElement) {
+          const val = parseInt(selectElement.value);
+          if (!isNaN(val)) {
+            scores[q.section] += val;
+            counts[q.section]++;
+          }
+        }
+      });
+
+      let resultText = `<h2>Your Results</h2>`;
+      for (let section in scores) {
+        let avg = (scores[section] / (counts[section] || 1)).toFixed(2);
+        resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
+      }
+
+      resultText += `<p><strong>UUID:</strong> ${userUUID}</p>`;
+      document.getElementById('results').innerHTML = resultText;
+
+      const payload = {
+        uuid: userUUID,
+        ageGroup: document.getElementById('age').value,
+        scores,
+        timestamp: new Date().toISOString()
+      };
+
+      fetch('https://yourserver.com/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+      .then(response => response.ok ? console.log("Submission saved.") : console.error("Submission failed."))
+      .catch(err => console.error("Error submitting:", err));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('questions.json')
+        .then(res => res.json())
+        .then(data => {
+          questions = data;
+          renderQuestions();
+        });
+
+      document.getElementById('submitBtn').addEventListener('click', calculateResults);
+
+      fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+          const ip = data.ip;
+          const userAgent = navigator.userAgent;
+          userUUID = hashString(ip + userAgent);
+        });
+    });
+  </script>
+</body>
+</html>
