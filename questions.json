@@ -1,0 +1,102 @@
+[
+  {
+    "text": "I carefully curate the photos and content I post online.",
+    "section": "selfPresentation"
+  },
+  {
+    "text": "I present a more idealized version of myself on social media.",
+    "section": "selfPresentation"
+  },
+  {
+    "text": "I often edit or filter my photos before posting.",
+    "section": "selfPresentation"
+  },
+  {
+    "text": "I avoid posting content that could reflect poorly on me.",
+    "section": "selfPresentation"
+  },
+  {
+    "text": "My online profile represents who I truly am.",
+    "section": "selfPresentation"
+  },
+  {
+    "text": "I use emojis, GIFs, or memes to express emotions online.",
+    "section": "communication"
+  },
+  {
+    "text": "I'm more comfortable expressing myself in writing than speaking.",
+    "section": "communication"
+  },
+  {
+    "text": "I frequently comment or engage on other people's posts.",
+    "section": "communication"
+  },
+  {
+    "text": "I prefer private messages over public comments.",
+    "section": "communication"
+  },
+  {
+    "text": "I adapt my tone and language depending on the platform or audience.",
+    "section": "communication"
+  },
+  {
+    "text": "I often share personal experiences or opinions publicly online.",
+    "section": "privacy"
+  },
+  {
+    "text": "I'm conscious of what information I share and who sees it.",
+    "section": "privacy"
+  },
+  {
+    "text": "I use different usernames or accounts to separate parts of my life.",
+    "section": "privacy"
+  },
+  {
+    "text": "I've regretted something I posted online.",
+    "section": "privacy"
+  },
+  {
+    "text": "I frequently review my privacy settings.",
+    "section": "privacy"
+  },
+  {
+    "text": "I feel more connected to people online than in real life.",
+    "section": "interaction"
+  },
+  {
+    "text": "I maintain friendships primarily through digital communication.",
+    "section": "interaction"
+  },
+  {
+    "text": "I feel anxious when people don't respond to my messages quickly.",
+    "section": "interaction"
+  },
+  {
+    "text": "I've formed meaningful relationships through online platforms.",
+    "section": "interaction"
+  },
+  {
+    "text": "I compare myself to others based on their social media.",
+    "section": "interaction"
+  },
+  {
+    "text": "I check my social media multiple times a day.",
+    "section": "platform"
+  },
+  {
+    "text": "I follow people or accounts that inspire or entertain me.",
+    "section": "platform"
+  },
+  {
+    "text": "I prefer platforms where I can control how I present myself.",
+    "section": "platform"
+  },
+  {
+    "text": "I enjoy experimenting with new online platforms or tools.",
+    "section": "platform"
+  },
+  {
+    "text": "I use different platforms for different purposes (e.g., work vs. fun).",
+    "section": "platform"
+  }
+]
