@@ -97,7 +97,7 @@
         const div = document.createElement('div');
         div.className = 'question';
         const selectName = `q${i+1}`;
-        div.innerHTML = `${i+1}. ${q.text} <select name="${selectName}" id="${selectName}">
+        div.innerHTML = `${i+1}. ${q.text} <select class="small" name="${selectName}" id="${selectName}">
           <option value="">--</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
         </select>`;
         container.appendChild(div);

@@ -4,7 +4,7 @@ body {
   max-width: 800px;
   margin: 20px auto;
   padding: 20px;
-  background-color: #d7cdb2;
+  background-color: #eeece8;
   border-radius: 10px;
 }
 h2 {
@@ -18,8 +18,17 @@ h2 {
   margin-bottom: 20px;
 }
 select {
-  width: 100%;
+  width: 20%;
   padding: 6px;
+  background-color: aqua;
+}
+select.small {
+  background-color: rgb(171, 234, 213);
+  font-size: 14px;     /* Make text smaller */
+  padding: 8px 6px;     /* Control inner space */
+  margin-left: 30px;
+  height: 40px;         /* Fixed height */
+  width: 40px;          /* Optional: fixed width */
 }
 button {
   padding: 10px 20px;
