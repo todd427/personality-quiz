@@ -99,11 +99,11 @@
         timestamp: new Date().toISOString(),
         age: document.querySelector('select[name="age"]').value,
         total: total,
-        scores: scores,
-        uuid: userUUID
+        scores: scores
       };
+      
       // Convert result data to JSON string
-      const jsonData = JSON.stringify(resultData, null, 2);
+      /*const jsonData = JSON.stringify(resultData, null, 2);
 
       // Create a Blob containing the JSON data
       const blob = new Blob([jsonData], { type: 'application/json' });
@@ -120,6 +120,7 @@
       // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
+      */
 
       fetch('submissions.json', {
         method: 'POST',

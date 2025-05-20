@@ -1,101 +1,126 @@
 [
   {
+    "id": "fb1",
     "text": "I carefully curate the photos and content I post online.",
     "section": "selfPresentation"
   },
   {
+    "id": "fb2",
     "text": "I present a more idealized version of myself on social media.",
     "section": "selfPresentation"
   },
   {
+    "id": "fb3",
     "text": "I often edit or filter my photos before posting.",
     "section": "selfPresentation"
   },
   {
+    "id": "fb4",
     "text": "I avoid posting content that could reflect poorly on me.",
     "section": "selfPresentation"
   },
   {
+    "id": "fb5",
     "text": "My online profile represents who I truly am.",
     "section": "selfPresentation"
   },
   {
+    "id": "fb6",
     "text": "I use emojis, GIFs, or memes to express emotions online.",
     "section": "communication"
   },
   {
+    "id": "fb7",
     "text": "I'm more comfortable expressing myself in writing than speaking.",
     "section": "communication"
   },
   {
+    "id": "fb8",
     "text": "I frequently comment or engage on other people's posts.",
     "section": "communication"
   },
   {
+    "id": "fb9",
     "text": "I prefer private messages over public comments.",
     "section": "communication"
   },
   {
+    "id": "fb10",
     "text": "I adapt my tone and language depending on the platform or audience.",
     "section": "communication"
   },
   {
+    "id": "fb11",
     "text": "I often share personal experiences or opinions publicly online.",
     "section": "privacy"
   },
   {
+    "id": "fb12",
     "text": "I'm conscious of what information I share and who sees it.",
     "section": "privacy"
   },
   {
+    "id": "fb13",
     "text": "I use different usernames or accounts to separate parts of my life.",
     "section": "privacy"
   },
   {
+    "id": "fb14",
     "text": "I've regretted something I posted online.",
     "section": "privacy"
   },
   {
+    "id": "fb15",
     "text": "I frequently review my privacy settings.",
     "section": "privacy"
   },
   {
+    "id": "fb16",
     "text": "I feel more connected to people online than in real life.",
     "section": "interaction"
   },
   {
+    "id": "fb17",
     "text": "I maintain friendships primarily through digital communication.",
     "section": "interaction"
   },
   {
+    "id": "fb18",
     "text": "I feel anxious when people don't respond to my messages quickly.",
     "section": "interaction"
   },
   {
+    "id": "fb19",
     "text": "I've formed meaningful relationships through online platforms.",
     "section": "interaction"
   },
   {
+    "id": "fb20",
     "text": "I compare myself to others based on their social media.",
     "section": "interaction"
   },
   {
+    "id": "fb21",
     "text": "I check my social media multiple times a day.",
     "section": "platform"
   },
   {
+    "id": "fb22",
     "text": "I follow people or accounts that inspire or entertain me.",
     "section": "platform"
   },
   {
+    "id": "fb23",
     "text": "I prefer platforms where I can control how I present myself.",
     "section": "platform"
   },
   {
+    "id": "fb24",
     "text": "I enjoy experimenting with new online platforms or tools.",
     "section": "platform"
   },
   {
+    "id": "fb25",
     "text": "I use different platforms for different purposes (e.g., work vs. fun).",
     "section": "platform"
   }
