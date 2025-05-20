@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feyman-Heisenberg Personality Questionnaire</title>
+  <link rel="stylesheet" href="style.css">
+  
+</head>
+<body>
+
+  <h1>Feyman-Heisenberg Personality Questionnaire</h1>
+  <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>  
+  <form id="quizForm">
+    <div class="section">
+      <h2>Demographics </h2>
+      <p>Please select your age group.</p>
+      <label>Age Group:</label>
+      <select name="age">
+        <option value="">-- Select --</option>
+        <option>0–2 (Infant)</option>
+        <option>3–12 (Child)</option>
+        <option>13–17 (Teen)</option>
+        <option>18–24 (Young Adult)</option>
+        <option>25–34 (Early Adult)</option>
+        <option>35–44 (Middle Adult)</option>
+        <option>45–54 (Older Adult)</option>
+        <option>55–64 (Senior)</option>
+        <option>65+ (Elder)</option>
+      </select>
+    </div>
+    <h2>Questions</h2>
+    <p>Please answer the following questions to help us understand your online personality. 
+      question is rated on a scale of 1 to 5, where 1 is <b>strongly</b> disagree and 5 is strongly <b>agree</b>.</p>
+      
+    <div class="section" id="questions">
+
+    </div>
+
+ 
+    <div class="section">
+      <button type="button" id="submitBtn">Submit</button>
+    </div>
+  </form>
+
+  <div id="results"></div>
+
+  <script>
+    let userUUID = '';
+    let questions = [];
+
+    function hashString(str) {
+      let hash = 0, i, chr;
+      if (str.length === 0) return hash.toString();
+      for (i = 0; i < str.length; i++) {
+        chr = str.charCodeAt(i);
+        hash = ((hash << 5) - hash) + chr;
+        hash |= 0;
+      }
+      return 'uuid-' + Math.abs(hash).toString(16);
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questions');
+      container.innerHTML = '';
+      questions.forEach((q, i) => {
+        const div = document.createElement('div');
+        div.className = 'question';
+        const selectName = `q${i+1}`;
+        div.innerHTML = `${i+1}. ${q.text} <select class="small" name="${selectName}" id="${selectName}">
+          <option value="">--</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+        </select>`;
+        container.appendChild(div);
+      });
+    }
+
+    function calculateResults() {
+      const scores = {
+        selfPresentation: 0,
+        communication: 0,
+        privacy: 0,
+        interaction: 0,
+        platform: 0
+      };
+      const counts = { ...scores };
+
+      questions.forEach((q, i) => {
+        const selectElement = document.getElementById(`q${i+1}`);
+        if (selectElement) {
+          const val = parseInt(selectElement.value);
+          if (!isNaN(val)) {
+            scores[q.section] += val;
+            counts[q.section]++;
+          }
+        }
+      });
+
+      let resultText = `<h2>Your Results</h2>`;
+      let total = 0;
+      for (let section in scores) {
+        let avg = (scores[section] / (counts[section] || 1)).toFixed(2);
+        //resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
+        total += avg;
+        avg ? total += avg : total += 0;
+      }
+      total = Object.values(scores).reduce((sum, score) => sum + score, 0);
+      /*const numAnswered = Object.values(counts).reduce((sum, count) => sum + count, 0);
+      total = numAnswered > 0 ? total / numAnswered : 0;
+      let ans = (total / 1).toFixed(2);*/
+      resultText += `<p>Feyman-Heisenberg Personality Index: ${total}</p>`;
+      resultText += `<h3>Thank you for completing the questionnaire.</h3>`;
+      // Save results to JSON file
+      const resultData = {
+        Test: 'Feyman-Heisenberg Personality Questionnaire',
+        timestamp: new Date().toISOString(),
+        age: document.querySelector('select[name="age"]').value,
+        total: total,
+        scores: scores
+      };
+      // Convert result data to JSON string
+      const jsonData = JSON.stringify(resultData, null, 2);
+
+      // Create a Blob containing the JSON data
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'UUID-' + userUUID + '.json';
+      
+      // Programmatically click the link to trigger download
+      document.body.appendChild(link);
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      fetch('/save-results', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(resultData)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Failed to save results');
+        }
+        console.log('Results saved successfully');
+      })
+      .catch(error => {
+        console.error('Error saving results:', error);
+      });
+      document.getElementById('results').innerHTML = resultText;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('questions.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to load questions.json');
+          }
+          return response.json();
+        })
+        .then(data => {
+          questions = data;
+          renderQuestions();
+        })
+        .catch(error => {
+          const container = document.getElementById('questions');
+          container.innerHTML = '<div class="error">Error loading questions. Please try again later.</div>';
+          console.error('Error loading questions.json:', error);
+        });
+      document.getElementById('submitBtn').addEventListener('click', calculateResults);
+    });
+    
+    fetch('https://api.ipify.org?format=json')
+        .then(response => response.json())
+        .then(data => {
+          const ip = data.ip;
+          const userAgent = navigator.userAgent;
+          userUUID = hashString(ip + userAgent);
+        });
+  </script>
+</body>
+</html>
