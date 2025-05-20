@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Feyman-Heisenberg Personality Questionnaire</title>
+  <title>Feyman-Drummelburg Personality Questionnaire</title>
   <link rel="stylesheet" href="style.css">
   
 </head>
 <body>
 
-  <h1>Feyman-Heisenberg Personality Questionnaire</h1>
+  <h1>Feyman-Drummelburg Personality Questionnaire</h1>
   <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>  
   <form id="quizForm">
     <div class="section">
@@ -75,43 +75,27 @@
     }
 
     function calculateResults() {
-      const scores = {
-        selfPresentation: 0,
-        communication: 0,
-        privacy: 0,
-        interaction: 0,
-        platform: 0
-      };
-      const counts = { ...scores };
-
+      const scores = {};
+      let total = 0;
       questions.forEach((q, i) => {
         const selectElement = document.getElementById(`q${i+1}`);
+        let val = null;
         if (selectElement) {
-          const val = parseInt(selectElement.value);
-          if (!isNaN(val)) {
-            scores[q.section] += val;
-            counts[q.section]++;
+          const parsed = parseInt(selectElement.value);
+          if (!isNaN(parsed)) {
+            val = parsed;
+            total += parsed;
           }
         }
+        scores[q.id] = val;
       });
 
       let resultText = `<h2>Your Results</h2>`;
-      let total = 0;
-      for (let section in scores) {
-        let avg = (scores[section] / (counts[section] || 1)).toFixed(2);
-        //resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
-        total += avg;
-        avg ? total += avg : total += 0;
-      }
-      total = Object.values(scores).reduce((sum, score) => sum + score, 0);
-      /*const numAnswered = Object.values(counts).reduce((sum, count) => sum + count, 0);
-      total = numAnswered > 0 ? total / numAnswered : 0;
-      let ans = (total / 1).toFixed(2);*/
-      resultText += `<p>Feyman-Heisenberg Personality Index: ${total}</p>`;
+      resultText += `<p>Feyman-Drummelburg Personality Index: ${total}</p>`;
       resultText += `<h3>Thank you for completing the questionnaire.</h3>`;
       // Save results to JSON file
       const resultData = {
-        Test: 'Feyman-Heisenberg Personality Questionnaire',
+        Test: 'Feyman-Drummelburg Personality Questionnaire',
         timestamp: new Date().toISOString(),
         age: document.querySelector('select[name="age"]').value,
         total: total,
