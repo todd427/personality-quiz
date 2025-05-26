@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .submission-card {
+            transition: transform 0.2s;
+            margin-bottom: 1rem;
+        }
+        .submission-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .timestamp {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        .loading-spinner {
+            width: 3rem;
+            height: 3rem;
+        }
+        .filters {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 2rem;
+        }
+        .modal-xl {
+            max-width: 90%;
+        }
+        .search-box {
+            position: relative;
+        }
+        .search-box i {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+        }
+        .search-box input {
+            padding-left: 35px;
+        }
+        .export-buttons {
+            margin-bottom: 1rem;
+        }
+        .filter-tags {
+            margin-top: 0.5rem;
+        }
+        .filter-tag {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .filter-tag i {
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <h1 class="mb-4">Quiz Results</h1>
+        
+        <div class="filters">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <div class="search-box">
+                        <i class="bi bi-search"></i>
+                        <input type="text" class="form-control" id="searchInput" placeholder="Search submissions...">
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <div class="btn-group export-buttons">
+                        <button class="btn btn-outline-primary" onclick="exportToCSV()">
+                            <i class="bi bi-file-earmark-excel"></i> Export CSV
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="exportToJSON()">
+                            <i class="bi bi-file-earmark-code"></i> Export JSON
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="perPage" class="form-label">Results per page:</label>
+                    <select class="form-select" id="perPage">
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="sortBy" class="form-label">Sort by:</label>
+                    <select class="form-select" id="sortBy">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="dateRange" class="form-label">Date Range:</label>
+                    <select class="form-select" id="dateRange">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="filterField" class="form-label">Filter by Field:</label>
+                    <select class="form-select" id="filterField">
+                        <option value="">Select Field</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="filter-tags" id="activeFilters"></div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Submissions Over Time</h5>
+                        <div class="chart-container">
+                            <canvas id="submissionsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Response Distribution</h5>
+                        <div class="chart-container">
+                            <canvas id="distributionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <div class="spinner-border loading-spinner" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <div id="results" class="row"></div>
+
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center" id="pagination"></ul>
+        </nav>
+    </div>
+
+    <!-- Detailed View Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Submission Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let allSubmissions = [];
+        let detailModal;
+        let submissionsChart;
+        let distributionChart;
+
+        // Initialize Bootstrap modal
+        document.addEventListener('DOMContentLoaded', function() {
+            detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+        });
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('results').style.display = 'flex';
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString();
+        }
+
+        function createSubmissionCard(submission) {
+            const card = document.createElement('div');
+            card.className = 'col-md-6 col-lg-4';
+            
+            try {
+                // Use the submission object directly since it contains the data
+                const data = submission;
+                if (!data) {
+                    throw new Error('No data available');
+                }
+
+                const answers = Object.entries(data)
+                    .filter(([key]) => !['uuid', 'created_at', 'timestamp'].includes(key))
+                    .map(([key, value]) => {
+                        if (typeof value === 'object' && value !== null) {
+                            return `${key}: ${JSON.stringify(value)}`;
+                        }
+                        return `${key}: ${value}`;
+                    })
+                    .join('<br>');
+
+                card.innerHTML = `
+                    <div class="card submission-card">
+                        <div class="card-body">
+                            <h5 class="card-title">Submission ${submission.uuid ? submission.uuid.slice(0, 8) : 'Unknown'}...</h5>
+                            <div class="card-text">${answers}</div>
+                            <div class="timestamp mt-2">Submitted: ${formatDate(submission.created_at)}</div>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="showDetails('${submission.uuid}')">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error creating submission card:', error);
+                card.innerHTML = `
+                    <div class="card submission-card">
+                        <div class="card-body">
+                            <h5 class="card-title text-danger">Error Loading Submission</h5>
+                            <p class="card-text">Failed to load submission data</p>
+                            <div class="timestamp mt-2">Submitted: ${formatDate(submission.created_at)}</div>
+                            <button class="btn btn-sm btn-outline-primary mt-2" onclick="showDetails('${submission.uuid}')">
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+            return card;
+        }
+
+        function showDetails(uuid) {
+            console.log('Showing details for UUID:', uuid); // Debug log
+            const submission = allSubmissions.find(s => s.uuid === uuid);
+            console.log('Found submission:', submission); // Debug log
+            
+            if (!submission) {
+                console.error('Submission not found for UUID:', uuid);
+                return;
+            }
+
+            const modalContent = document.getElementById('modalContent');
+            if (!modalContent) {
+                console.error('Modal content element not found');
+                return;
+            }
+
+            // Use the submission object directly
+            const data = submission;
+            console.log('Submission data:', data); // Debug log
+
+            // Calculate age if birthdate is present
+            let age = 'N/A';
+            let birthdate = data.birthdate || data.birth_date || data.date_of_birth;
+            console.log('Birthdate found:', birthdate); // Debug log
+
+            // Function to get score color class
+            function getScoreColorClass(score) {
+                if (score === 'N/A' || score === null) return 'text-muted';
+                const numScore = parseFloat(score);
+                if (isNaN(numScore)) return 'text-muted';
+                if (numScore >= 80) return 'text-success';
+                if (numScore >= 60) return 'text-warning';
+                return 'text-danger';
+            }
+            
+            let content = '<div class="row mb-4">';
+            
+            // Age Card
+            content += '<div class="col-md-3">';
+            content += '<div class="card">';
+            content += '<div class="card-body">';
+            content += `<h5 class="card-title">Age</h5>`;
+            content += `<p class="card-text display-6">${data.age || 'N/A'}</p>`;
+            content += '</div></div></div>';
+            
+            // Total Score Card
+            content += '<div class="col-md-3">';
+            content += '<div class="card">';
+            content += '<div class="card-body">';
+            content += `<h5 class="card-title">Total Score</h5>`;
+            content += `<p class="card-text display-6 ${getScoreColorClass(data.total)}">${data.total || 'N/A'}</p>`;
+            content += '</div></div></div>';
+            
+            // Scores Breakdown Card
+            content += '<div class="col-md-6">';
+            content += '<div class="card">';
+            content += '<div class="card-body">';
+            content += '<h5 class="card-title">Scores Breakdown</h5>';
+            content += '<div class="table-responsive"><table class="table table-sm">';
+            content += '<thead><tr><th>Category</th><th>Score</th></tr></thead><tbody>';
+            
+            if (data.scores) {
+                Object.entries(data.scores).forEach(([key, value]) => {
+                    content += `<tr>
+                        <td>${key}</td>
+                        <td class="${getScoreColorClass(value)}">${value || 'N/A'}</td>
+                    </tr>`;
+                });
+            }
+            
+            content += '</tbody></table></div>';
+            content += '</div></div></div>';
+            
+            content += '</div>';
+
+            // Original data table
+            content += '<div class="table-responsive mt-4"><table class="table">';
+            content += '<tr><th>Field</th><th>Value</th></tr>';
+            
+            Object.entries(data).forEach(([key, value]) => {
+                if (!['uuid', 'created_at', 'timestamp'].includes(key)) {
+                    const displayValue = typeof value === 'object' ? JSON.stringify(value) : value;
+                    const isScore = key.toLowerCase().includes('score') || key.toLowerCase().includes('points');
+                    const scoreClass = isScore ? getScoreColorClass(parseFloat(value)) : '';
+                    content += `<tr>
+                        <td>${key}</td>
+                        <td class="${scoreClass}">${displayValue || 'N/A'}</td>
+                    </tr>`;
+                }
+            });
+            
+            content += '</table></div>';
+            content += `<div class="mt-3"><strong>Submitted:</strong> ${formatDate(data.created_at)}</div>`;
+            content += `<div><strong>UUID:</strong> ${data.uuid}</div>`;
+            
+            modalContent.innerHTML = content;
+            
+            // Initialize the modal if it hasn't been initialized
+            if (!detailModal) {
+                detailModal = new bootstrap.Modal(document.getElementById('detailModal'));
+            }
+            detailModal.show();
+        }
+
+        function updateCharts(submissions) {
+            // Submissions over time chart
+            const timeData = {};
+            submissions.forEach(sub => {
+                const date = new Date(sub.created_at).toLocaleDateString();
+                timeData[date] = (timeData[date] || 0) + 1;
+            });
+
+            if (submissionsChart) {
+                submissionsChart.destroy();
+            }
+
+            const timeCtx = document.getElementById('submissionsChart').getContext('2d');
+            submissionsChart = new Chart(timeCtx, {
+                type: 'line',
+                data: {
+                    labels: Object.keys(timeData),
+                    datasets: [{
+                        label: 'Submissions',
+                        data: Object.values(timeData),
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Response distribution chart
+            const distributionData = {};
+            submissions.forEach(sub => {
+                const data = sub.data || {};
+                Object.entries(data).forEach(([key, value]) => {
+                    if (key !== 'uuid') {
+                        if (!distributionData[key]) {
+                            distributionData[key] = {};
+                        }
+                        distributionData[key][value] = (distributionData[key][value] || 0) + 1;
+                    }
+                });
+            });
+
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            const distCtx = document.getElementById('distributionChart').getContext('2d');
+            const firstKey = Object.keys(distributionData)[0];
+            if (firstKey) {
+                distributionChart = new Chart(distCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(distributionData[firstKey]),
+                        datasets: [{
+                            data: Object.values(distributionData[firstKey]),
+                            backgroundColor: [
+                                'rgb(255, 99, 132)',
+                                'rgb(54, 162, 235)',
+                                'rgb(255, 206, 86)',
+                                'rgb(75, 192, 192)',
+                                'rgb(153, 102, 255)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        }
+
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // Previous button
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `
+                <a class="page-link" href="#" aria-label="Previous" ${currentPage === 1 ? 'tabindex="-1"' : ''}>
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            `;
+            if (currentPage > 1) {
+                prevLi.querySelector('a').onclick = (e) => {
+                    e.preventDefault();
+                    loadSubmissions(currentPage - 1);
+                };
+            }
+            pagination.appendChild(prevLi);
+
+            // Page numbers
+            for (let i = 1; i <= totalPages; i++) {
+                const li = document.createElement('li');
+                li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                li.innerHTML = `<a class="page-link" href="#">${i}</a>`;
+                li.querySelector('a').onclick = (e) => {
+                    e.preventDefault();
+                    loadSubmissions(i);
+                };
+                pagination.appendChild(li);
+            }
+
+            // Next button
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `
+                <a class="page-link" href="#" aria-label="Next" ${currentPage === totalPages ? 'tabindex="-1"' : ''}>
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            `;
+            if (currentPage < totalPages) {
+                nextLi.querySelector('a').onclick = (e) => {
+                    e.preventDefault();
+                    loadSubmissions(currentPage + 1);
+                };
+            }
+            pagination.appendChild(nextLi);
+        }
+
+        function updateFilterFields(submissions) {
+            const filterField = document.getElementById('filterField');
+            const fields = new Set();
+            
+            submissions.forEach(sub => {
+                const data = sub.data || {};
+                Object.keys(data).forEach(key => {
+                    if (key !== 'uuid') {
+                        fields.add(key);
+                    }
+                });
+            });
+
+            filterField.innerHTML = '<option value="">Select Field</option>';
+            fields.forEach(field => {
+                filterField.innerHTML += `<option value="${field}">${field}</option>`;
+            });
+        }
+
+        function applyFilters(submissions) {
+            let filtered = [...submissions];
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const dateRange = document.getElementById('dateRange').value;
+            const filterField = document.getElementById('filterField').value;
+
+            // Search filter
+            if (searchTerm) {
+                filtered = filtered.filter(sub => {
+                    const data = sub.data || {};
+                    return Object.entries(data).some(([key, value]) => 
+                        String(value).toLowerCase().includes(searchTerm)
+                    );
+                });
+            }
+
+            // Date range filter
+            if (dateRange !== 'all') {
+                const now = new Date();
+                const startDate = new Date();
+                switch (dateRange) {
+                    case 'today':
+                        startDate.setHours(0, 0, 0, 0);
+                        break;
+                    case 'week':
+                        startDate.setDate(now.getDate() - 7);
+                        break;
+                    case 'month':
+                        startDate.setMonth(now.getMonth() - 1);
+                        break;
+                }
+                filtered = filtered.filter(sub => new Date(sub.created_at) >= startDate);
+            }
+
+            // Field filter
+            if (filterField) {
+                filtered = filtered.filter(sub => {
+                    const data = sub.data || {};
+                    return data[filterField] !== undefined;
+                });
+            }
+
+            return filtered;
+        }
+
+        function updateActiveFilters() {
+            const activeFilters = document.getElementById('activeFilters');
+            activeFilters.innerHTML = '';
+
+            const searchTerm = document.getElementById('searchInput').value;
+            const dateRange = document.getElementById('dateRange').value;
+            const filterField = document.getElementById('filterField').value;
+
+            if (searchTerm) {
+                addFilterTag('Search', searchTerm);
+            }
+            if (dateRange !== 'all') {
+                addFilterTag('Date Range', dateRange);
+            }
+            if (filterField) {
+                addFilterTag('Field', filterField);
+            }
+        }
+
+        function addFilterTag(label, value) {
+            const activeFilters = document.getElementById('activeFilters');
+            const tag = document.createElement('span');
+            tag.className = 'filter-tag';
+            tag.innerHTML = `${label}: ${value} <i class="bi bi-x"></i>`;
+            tag.querySelector('i').onclick = () => {
+                switch (label) {
+                    case 'Search':
+                        document.getElementById('searchInput').value = '';
+                        break;
+                    case 'Date Range':
+                        document.getElementById('dateRange').value = 'all';
+                        break;
+                    case 'Field':
+                        document.getElementById('filterField').value = '';
+                        break;
+                }
+                loadSubmissions(1);
+            };
+            activeFilters.appendChild(tag);
+        }
+
+        async function loadSubmissions(page = 1) {
+            showLoading();
+            currentPage = page;
+            const perPage = document.getElementById('perPage').value;
+            
+            try {
+                console.log('Fetching submissions...'); // Debug log
+                const response = await fetch(`/submissions.json?page=${page}&per_page=${perPage}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('API Response:', data); // Debug log
+                
+                if (data.success) {
+                    // Ensure we have valid submissions data
+                    if (!Array.isArray(data.submissions)) {
+                        console.error('Invalid submissions data:', data);
+                        throw new Error('Invalid submissions data format');
+                    }
+
+                    console.log('Raw submissions:', data.submissions); // Debug log
+                    allSubmissions = data.submissions.map(submission => {
+                        // Log each submission's structure
+                        console.log('Processing submission:', submission);
+                        
+                        // Ensure each submission has the required fields
+                        if (!submission.uuid) {
+                            console.warn('Submission missing UUID:', submission);
+                        }
+                        if (!submission.created_at) {
+                            console.warn('Submission missing created_at:', submission);
+                        }
+                        if (!submission.data) {
+                            console.warn('Submission missing data field:', submission);
+                        }
+                        
+                        return submission;
+                    });
+
+                    const filteredSubmissions = applyFilters(allSubmissions);
+                    console.log('Filtered submissions:', filteredSubmissions); // Debug log
+                    
+                    const resultsDiv = document.getElementById('results');
+                    resultsDiv.innerHTML = '';
+                    
+                    if (filteredSubmissions.length === 0) {
+                        resultsDiv.innerHTML = `
+                            <div class="col-12 text-center py-5">
+                                <h3>No submissions found</h3>
+                                <p class="text-muted">Try adjusting your filters</p>
+                            </div>
+                        `;
+                    } else {
+                        filteredSubmissions.forEach(submission => {
+                            resultsDiv.appendChild(createSubmissionCard(submission));
+                        });
+                    }
+
+                    updateCharts(filteredSubmissions);
+                    updateFilterFields(allSubmissions);
+                    updateActiveFilters();
+                    
+                    // Update pagination if available
+                    if (data.pagination) {
+                        totalPages = data.pagination.total_pages;
+                        updatePagination();
+                    } else {
+                        console.warn('No pagination data in response');
+                        totalPages = 1;
+                        updatePagination();
+                    }
+                } else {
+                    throw new Error(data.error || 'Failed to load submissions');
+                }
+            } catch (error) {
+                console.error('Error loading submissions:', error);
+                const resultsDiv = document.getElementById('results');
+                resultsDiv.innerHTML = `
+                    <div class="col-12 text-center py-5">
+                        <h3 class="text-danger">Error Loading Submissions</h3>
+                        <p class="text-muted">${error.message}</p>
+                        <button class="btn btn-primary mt-3" onclick="loadSubmissions(${currentPage})">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function exportToCSV() {
+            const submissions = applyFilters(allSubmissions);
+            if (submissions.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const headers = new Set();
+            submissions.forEach(sub => {
+                const data = sub.data || {};
+                Object.keys(data).forEach(key => headers.add(key));
+            });
+
+            const csvContent = [
+                Array.from(headers).join(','),
+                ...submissions.map(sub => {
+                    const data = sub.data || {};
+                    return Array.from(headers).map(header => 
+                        `"${(data[header] || '').toString().replace(/"/g, '""')}"`
+                    ).join(',');
+                })
+            ].join('\n');
+
+            downloadFile(csvContent, 'submissions.csv', 'text/csv');
+        }
+
+        function exportToJSON() {
+            const submissions = applyFilters(allSubmissions);
+            if (submissions.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const jsonContent = JSON.stringify(submissions, null, 2);
+            downloadFile(jsonContent, 'submissions.json', 'application/json');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // Event listeners
+        document.getElementById('perPage').addEventListener('change', () => loadSubmissions(1));
+        document.getElementById('sortBy').addEventListener('change', () => loadSubmissions(1));
+        document.getElementById('dateRange').addEventListener('change', () => loadSubmissions(1));
+        document.getElementById('filterField').addEventListener('change', () => loadSubmissions(1));
+        document.getElementById('searchInput').addEventListener('input', debounce(() => loadSubmissions(1), 300));
+
+        // Debounce function for search input
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Initial load
+        loadSubmissions();
+    </script>
+</body>
+</html> 

@@ -3,14 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Feyman-Heisenberg Personality Questionnaire</title>
+  <meta version="test2.html"/>
+  <title>Feyman-Drummelburg Personality Questionnaire</title>
   <link rel="stylesheet" href="style.css">
   
 </head>
 <body>
 
-  <h1>Feyman-Heisenberg Personality Questionnaire</h1>
-  <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>  
+  <h1>The Feyman-Drummelburg Personality Questionnaire</h1>
+  <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>
+  <p>The name is a homage to <a href="https://www.imdb.com/title/tt1964418/?ref_=nv_sr_srsg_0_tt_8_nm_0_in_0_q_tomorrowland" target="_blank">Tomorrowland</a>.</p>  
   <form id="quizForm">
     <div class="section">
       <h2>Demographics </h2>
@@ -47,37 +49,7 @@
 
   <script>
     let userUUID = '';
-    const questions = [
-      { text: "I carefully curate the photos and content I post online.", section: "selfPresentation" },
-      { text: "I present a more idealized version of myself on social media.", section: "selfPresentation" },
-      { text: "I often edit or filter my photos before posting.", section: "selfPresentation" },
-      { text: "I avoid posting content that could reflect poorly on me.", section: "selfPresentation" },
-      { text: "My online profile represents who I truly am.", section: "selfPresentation" },
-
-      { text: "I use emojis, GIFs, or memes to express emotions online.", section: "communication" },
-      { text: "I'm more comfortable expressing myself in writing than speaking.", section: "communication" },
-      { text: "I frequently comment or engage on other people's posts.", section: "communication" },
-      { text: "I prefer private messages over public comments.", section: "communication" },
-      { text: "I adapt my tone and language depending on the platform or audience.", section: "communication" },
-
-      { text: "I often share personal experiences or opinions publicly online.", section: "privacy" },
-      { text: "I'm conscious of what information I share and who sees it.", section: "privacy" },
-      { text: "I use different usernames or accounts to separate parts of my life.", section: "privacy" },
-      { text: "I've regretted something I posted online.", section: "privacy" },
-      { text: "I frequently review my privacy settings.", section: "privacy" },
-
-      { text: "I feel more connected to people online than in real life.", section: "interaction" },
-      { text: "I maintain friendships primarily through digital communication.", section: "interaction" },
-      { text: "I feel anxious when people don't respond to my messages quickly.", section: "interaction" },
-      { text: "I've formed meaningful relationships through online platforms.", section: "interaction" },
-      { text: "I compare myself to others based on their social media.", section: "interaction" },
-
-      { text: "I check my social media multiple times a day.", section: "platform" },
-      { text: "I follow people or accounts that inspire or entertain me.", section: "platform" },
-      { text: "I prefer platforms where I can control how I present myself.", section: "platform" },
-      { text: "I enjoy experimenting with new online platforms or tools.", section: "platform" },
-      { text: "I use different platforms for different purposes (e.g., work vs. fun).", section: "platform" }
-    ];
+    let questions = [];
 
     function hashString(str) {
       let hash = 0, i, chr;
@@ -105,50 +77,35 @@
     }
 
     function calculateResults() {
-      const scores = {
-        selfPresentation: 0,
-        communication: 0,
-        privacy: 0,
-        interaction: 0,
-        platform: 0
-      };
-      const counts = { ...scores };
-
+      const scores = {};
+      let total = 0;
       questions.forEach((q, i) => {
         const selectElement = document.getElementById(`q${i+1}`);
+        let val = null;
         if (selectElement) {
-          const val = parseInt(selectElement.value);
-          if (!isNaN(val)) {
-            scores[q.section] += val;
-            counts[q.section]++;
+          const parsed = parseInt(selectElement.value);
+          if (!isNaN(parsed)) {
+            val = parsed;
+            total += parsed;
           }
         }
+        scores[q.id] = val;
       });
 
       let resultText = `<h2>Your Results</h2>`;
-      let total = 0;
-      for (let section in scores) {
-        let avg = (scores[section] / (counts[section] || 1)).toFixed(2);
-        //resultText += `<p><strong>${section.replace(/([A-Z])/g, ' $1')}:</strong> ${avg} / 5</p>`;
-        total += avg;
-        avg ? total += avg : total += 0;
-      }
-      total = Object.values(scores).reduce((sum, score) => sum + score, 0);
-      /*const numAnswered = Object.values(counts).reduce((sum, count) => sum + count, 0);
-      total = numAnswered > 0 ? total / numAnswered : 0;
-      let ans = (total / 1).toFixed(2);*/
-      resultText += `<p>Feyman-Heisenberg Personality Index: ${total}</p>`;
+      resultText += `<p>Feyman-Drummelburg Personality Index: ${total}</p>`;
       resultText += `<h3>Thank you for completing the questionnaire.</h3>`;
       // Save results to JSON file
       const resultData = {
-        Test: 'Feyman-Heisenberg Personality Questionnaire',
+        Test: 'Feyman-Drummelburg Personality Questionnaire',
         timestamp: new Date().toISOString(),
         age: document.querySelector('select[name="age"]').value,
         total: total,
         scores: scores
       };
+      
       // Convert result data to JSON string
-      const jsonData = JSON.stringify(resultData, null, 2);
+      /*const jsonData = JSON.stringify(resultData, null, 2);
 
       // Create a Blob containing the JSON data
       const blob = new Blob([jsonData], { type: 'application/json' });
@@ -165,8 +122,9 @@
       // Clean up
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
+      */
 
-      fetch('/save-results', {
+      fetch('submissions.json', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -177,16 +135,31 @@
         if (!response.ok) {
           throw new Error('Failed to save results');
         }
-        console.log('Results saved successfully');
+        console.log('Results saved to submissions.json successfully');
       })
       .catch(error => {
-        console.error('Error saving results:', error);
+        console.error('Error saving results to submissions.json:', error);
       });
       document.getElementById('results').innerHTML = resultText;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      renderQuestions();
+      fetch('questions.json')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Failed to load questions.json');
+          }
+          return response.json();
+        })
+        .then(data => {
+          questions = data;
+          renderQuestions();
+        })
+        .catch(error => {
+          const container = document.getElementById('questions');
+          container.innerHTML = '<div class="error">Error loading questions. Please try again later.</div>';
+          console.error('Error loading questions.json:', error);
+        });
       document.getElementById('submitBtn').addEventListener('click', calculateResults);
     });
     
