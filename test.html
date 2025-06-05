@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <meta version="test.html"/>
-  <title>Feyman-Drummelburg Personality Questionnaire</title>
+  <title>Feynman-Drummelburg Personality Questionnaire</title>
   <link rel="stylesheet" href="style.css">
   
 </head>
 <body>
 
-  <h1>Feyman-Drummelburg Personality Questionnaire</h1>
+  <h1>Feynman-Drummelburg Personality Questionnaire</h1>
   <p>This questionnaire is designed to help us understand how you use social media and what you like about it. It is anonymous and will not be shared with anyone.</p>  
   <form id="quizForm">
     <div class="section">
@@ -92,11 +92,11 @@
       });
 
       let resultText = `<h2>Your Results</h2>`;
-      resultText += `<p>Feyman-Drummelburg Personality Index: ${total}</p>`;
+      resultText += `<p>Feynman-Drummelburg Personality Index: ${total}</p>`;
       resultText += `<h3>Thank you for completing the questionnaire.</h3>`;
       // Save results to JSON file
       const resultData = {
-        Test: 'Feyman-Drummelburg Personality Questionnaire',
+        Test: 'Feynman-Drummelburg Personality Questionnaire',
         timestamp: new Date().toISOString(),
         age: document.querySelector('select[name="age"]').value,
         total: total,
