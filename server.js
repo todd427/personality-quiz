@@ -9,6 +9,40 @@ app.use(express.static(__dirname));
 
 const submissionsPath = path.join(__dirname, 'submissions.json');
 
+// GET handler to return paginated submissions
+app.get('/submissions.json', (req, res) => {
+  const page = parseInt(req.query.page, 10) || 1;
+  const perPage = parseInt(req.query.per_page, 10) || 10;
+
+  fs.readFile(submissionsPath, 'utf8', (err, data) => {
+    let submissions = [];
+    if (!err && data) {
+      try {
+        submissions = JSON.parse(data);
+      } catch (e) {
+        submissions = [];
+      }
+    }
+
+    // Order newest first similar to Flask implementation
+    const ordered = submissions.slice().reverse();
+    const total = ordered.length;
+    const start = (page - 1) * perPage;
+    const paginated = ordered.slice(start, start + perPage);
+
+    res.json({
+      success: true,
+      submissions: paginated,
+      pagination: {
+        page,
+        per_page: perPage,
+        total,
+        total_pages: Math.ceil(total / perPage)
+      }
+    });
+  });
+});
+
 app.post('/submissions.json', (req, res) => {
   const submission = req.body;
   fs.readFile(submissionsPath, 'utf8', (err, data) => {
